@@ -20,6 +20,24 @@ display_spinner() {
   printf "\r"
 }
 
+row=2
+col=2
+
+countdown() {
+        msg="Wait 30 seconds for n8n ${1}..."
+        clear
+        tput cup $row $col
+        echo -n "$msg"
+        l=${#msg}
+        l=$(( l+$col ))
+        for i in {30..1}
+        do
+                tput cup $row $l
+                echo -n "$i"
+                sleep 1
+        done
+}
+
 execute_command() {
   local cmd="$*"
   log "Executing: $cmd"
@@ -88,12 +106,12 @@ check_packages(){
 
 install_n8n(){
   execute_command "echo 'install n8n globally'"
-  execute_command "npm install n8n -g"
+  npm install n8n -g
 }
 
 adding_systemd_entry(){
-echo 'adding systemd entry'
-sudo cat > /etc/systemd/system/n8n.service <<EOF
+  echo 'adding systemd entry'
+  sudo cat > /etc/systemd/system/n8n.service <<EOF
 [Unit]
 Description=n8n - Easily automate tasks across different services.
 After=network.target
@@ -111,13 +129,14 @@ EOF
 }
 
 n8n_service(){
-echo 'reloading, enabling on boot and starting n8n'
-sudo systemctl daemon-reload
-sudo systemctl enable n8n
-sudo systemctl start n8n
-echo 'wait 60 seconds for n8n service'
-sleep 60
-sudo systemctl status n8n
+  echo 'reloading, enabling on boot and starting n8n'
+  sudo systemctl daemon-reload
+  sudo systemctl enable n8n
+  sudo systemctl start n8n
+}
+
+n8n_status(){
+  systemctl status n8n.service
 }
 
 main(){
@@ -127,6 +146,8 @@ main(){
   install_n8n
   adding_systemd_entry
   n8n_service
+  countdown
+  n8n_status
 }
 
 main
